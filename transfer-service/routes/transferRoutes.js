@@ -3,19 +3,27 @@ const router = express.Router();
 const axios = require("axios").default;
 const isAuth = require("../middleware/auth");
 
-router.post("/transfer", isAuth, async (req, res) => {
+router.get("/", (req, res) => {
+  res.json({
+    message: "Running"
+  });
+});
+
+router.patch("/transfer", isAuth, async (req, res) => {
   try {
-    const { amount, recipient, allocation } = req.body;
+    const { amount, recipient, allocationName } = req.body;
     const token = req.token;
     //decrease the user logged in balance
     const decreaseYourBalance = await axios.patch(
       "http://localhost:3002/allocations/balance/decrease",
       {
-        amount,
-        name: allocation
+        amount: amount + 50,
+        name: allocationName
       },
       {
-        header: "Bearer " + token
+        headers: {
+          Authorization: "Bearer " + token
+        }
       }
     );
 
@@ -24,6 +32,25 @@ router.post("/transfer", isAuth, async (req, res) => {
       {
         phoneNumber: recipient,
         amount
+      },
+      {
+        headers: {
+          Authorization: "Bearer " + token
+        }
+      }
+    );
+
+    const insertMutation = await axios.post(
+      "http://localhost:3001/mutations",
+      {
+        code: "TRO",
+        recipient,
+        amount
+      },
+      {
+        headers: {
+          Authorization: "Bearer " + token
+        }
       }
     );
 
@@ -34,7 +61,7 @@ router.post("/transfer", isAuth, async (req, res) => {
     });
   } catch (error) {
     res.status(500).json({
-      message: "Internal server error",
+      message: error,
       status: 500,
       data: null
     });

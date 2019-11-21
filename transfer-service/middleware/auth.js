@@ -18,6 +18,7 @@ const isAuth = async (req, res, next) => {
 
     // eslint-disable-next-line require-atomic-updates
     req.decode = verify.data.data[0].decoded;
+    // eslint-disable-next-line require-atomic-updates
     req.token = verify.data.data[0].token;
 
     next();

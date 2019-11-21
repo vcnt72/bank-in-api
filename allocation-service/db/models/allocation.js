@@ -4,8 +4,7 @@ module.exports = (sequelize, DataTypes) => {
     "Allocation",
     {
       name: {
-        type: DataTypes.STRING,
-        unique: true
+        type: DataTypes.STRING
       },
       category: {
         type: DataTypes.STRING

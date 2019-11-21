@@ -4,6 +4,32 @@ const Allocation = require("../db/models").Allocation;
 const isAuth = require("../middleware/auth");
 const sequelize = require("../db/models").sequelize;
 
+// //when user is being activated by admin
+// router.post("/allocation/create/main", isAuth, async (req, res) => {
+//   try {
+//     const { phoneNumber } = req.body;
+
+//     await Allocation.create({
+//       user: phoneNumber,
+//       name: "main",
+//       category: "main",
+//       balance: 0
+//     });
+
+//     res.status(201).json({
+//       message: "Success",
+//       status: 201,
+//       data: null
+//     });
+//   } catch (error) {
+//     res.status(201).json({
+//       message: "Success",
+//       status: 201,
+//       data: null
+//     });
+//   }
+// });
+
 //get allocations and will create allocations for the users if being called for the firsttime
 router.get("/allocations", isAuth, async (req, res) => {
   try {
@@ -11,7 +37,7 @@ router.get("/allocations", isAuth, async (req, res) => {
 
     //For every first time user login. the main balance are created
     //will insert user at first time called
-    await Allocation.findOrCreate({
+    const didItsHaveMain = await Allocation.findOrCreate({
       where: {
         user: decode.phoneNumber
       },
@@ -119,12 +145,12 @@ router.post("/allocations/check/balance", isAuth, async (req, res) => {
 //by authenticating users
 router.patch("/allocations/balance/decrease", isAuth, async (req, res) => {
   try {
-    const amount = req.body.amount;
+    const { name, amount } = req.body;
     const decode = req.decode;
     const allocation = await Allocation.findOne({
       where: {
         user: decode.phoneNumber,
-        name: req.body.name
+        name
       }
     });
 

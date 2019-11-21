@@ -4,7 +4,6 @@ const Mutation = require("../db/models").Mutation;
 const auth = require("../middleware/auth");
 const axios = require("axios").default;
 const utils = require("../utils/mutationUtils");
-const sequelize = require("sequelize").Sequelize;
 
 router.get("/mutations", auth, async (req, res) => {
   try {
@@ -38,10 +37,13 @@ router.post("/mutations", auth, async (req, res) => {
     const code = input.code;
 
     //amount which recipient get
-    const recipientAmount = utils.amountFormatter("TRI", input.amount);
+    const recipientAmount = utils.amountFormatter(
+      "TRI",
+      input.amount.toString()
+    );
 
     //Set the amount to string for type save
-    input.amount = utils.amountFormatter(input.code, input.amount + "");
+    input.amount = utils.amountFormatter(input.code, input.amount);
     input.user = decode.id;
     input.code = input.code + (await utils.codeFormatter(decode.id));
 

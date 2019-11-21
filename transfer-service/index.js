@@ -1,12 +1,12 @@
 const express = require("express");
 const app = express();
 const bodyParser = require("body-parser");
-// const userRouter = require("./routes/userRoute");
+const transferRouter = require("./routes/transferRoutes");
 
 const port = 3003 || process.env.PORT;
 app.use(bodyParser.json());
 
-// app.use(userRouter);
+app.use(transferRouter);
 
 app.listen(port, () => {
   console.log("listened to " + port);

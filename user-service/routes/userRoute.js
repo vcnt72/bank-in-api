@@ -195,8 +195,8 @@ router.post("/users/logout", auth.isAuth, async (req, res) => {
 router.patch("/users/:id/status", auth.isAdmin, async (req, res) => {
   try {
     //find user by id for admin reasons
-    const user = await User.findById(req.params.id);
-    const status = req.body.status;
+    const user = await User.findByPk(req.params.id);
+    const { status } = req.body;
 
     // if status wasn't as expected
     if (
@@ -211,12 +211,11 @@ router.patch("/users/:id/status", auth.isAdmin, async (req, res) => {
       });
     }
 
-    await user.updateOne({
-      status
-    });
+    user.status = status;
+
+    await user.save();
 
     userServices.sendEmail(user.email, status);
-
     res.status(200).json({
       message: "Success update",
       status: 200,
@@ -228,7 +227,6 @@ router.patch("/users/:id/status", auth.isAdmin, async (req, res) => {
       status: 500,
       data: null
     });
-    error;
   }
 });
 
