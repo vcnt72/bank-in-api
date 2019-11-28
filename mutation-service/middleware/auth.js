@@ -8,7 +8,7 @@ const isAuth = async (req, res, next) => {
       token
     });
 
-    if (verify.data.status === 404) {
+    if (verify.status === 401) {
       return res.status(401).json({
         message: "Unauthorized",
         status: 401,
@@ -17,7 +17,7 @@ const isAuth = async (req, res, next) => {
     }
 
     // eslint-disable-next-line require-atomic-updates
-    req.decode = verify.data.data[0].decoded;
+    req.decode = verify.data.data.user;
 
     next();
   } catch (error) {

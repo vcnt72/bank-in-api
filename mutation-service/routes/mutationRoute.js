@@ -8,10 +8,13 @@ const utils = require("../utils/mutationUtils");
 router.get("/mutations", auth, async (req, res) => {
   try {
     // Get all mutations
-    const decoded = req.decode;
+    const email = req.decode.user;
+    const decoded = await axios.post("http://localhost:3001/users/find", {
+      email
+    });
 
     const mutations = await Mutation.findAll({
-      where: { user: decoded.id }
+      where: { user: decoded.data.data.id }
     });
 
     res.status(200).json({

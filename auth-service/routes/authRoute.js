@@ -6,10 +6,37 @@ const mailServices = require("../services/mailServices");
 const Auth = require("../db/models").Auth;
 const jwt = require("jsonwebtoken");
 
-router.get("/auth", (req, res) => {
-  res.json({
-    message: "hi"
-  });
+router.post("/auth", async (req, res) => {
+  try {
+    const token = req.body.token;
+    const userAuth = await Auth.findOne({
+      where: {
+        token
+      }
+    });
+
+    if (!userAuth) {
+      return res.status(404).json({
+        status: 404,
+        message: "Not found",
+        data: null
+      });
+    }
+
+    res.status(200).json({
+      status: 200,
+      message: "Success",
+      data: {
+        user: userAuth
+      }
+    });
+  } catch (error) {
+    res.status(500).json({
+      status: 500,
+      message: "Internal server error",
+      data: null
+    });
+  }
 });
 
 // router.post("/auth", (req, res) => {});

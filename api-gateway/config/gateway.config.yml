@@ -11,12 +11,18 @@ apiEndpoints:
   auth-api:
     host: localhost
     paths: "/auth*"
+  mutation-api:
+    host: localhost
+    paths: "/mutations*"
+
 serviceEndpoints:
   # see: http://www.express-gateway.io/docs/configuration/gateway.config.yml/serviceEndpoints
   usersrv:
     url: "http://localhost:3001/"
   authsrv:
     url: "http://localhost:3000/"
+  mutationsrv:
+    url: "http://localhost:3002/"
 policies:
   - proxy
 pipelines:
@@ -37,4 +43,13 @@ pipelines:
       - proxy:
           - action:
               serviceEndpoint: authsrv
+              changeOrigin: true
+
+  mutation:
+    apiEndpoints:
+      - mutation-api
+    policies:
+      - proxy:
+          - action:
+              serviceEndpoint: mutationsrv
               changeOrigin: true
