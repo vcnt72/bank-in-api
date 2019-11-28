@@ -3,12 +3,6 @@ const router = express.Router();
 const auth = require("../middleware/auth");
 const User = require("../db/models").User;
 
-router.get("/", (req, res) => {
-  res.json({
-    message: "Running"
-  });
-});
-
 router.post("/users", async (req, res) => {
   try {
     const user = await User.findOrCreate({
@@ -96,6 +90,41 @@ router.get("/users", auth.isAdmin, async (req, res) => {
 });
 
 router.post("/users/find", async (req, res) => {
+  try {
+    //Get user by phone number
+
+    const input = req.body;
+
+    const user = await User.findOne({
+      where: {
+        ...input
+      }
+    });
+
+    //if user wasn't found
+    if (!user)
+      return res.status(208).json({
+        message: "Not Found",
+        status: 208,
+        data: null
+      });
+
+    //return user id if user was found
+    return res.status(200).json({
+      message: "Success",
+      status: 200,
+      data: user
+    });
+  } catch (error) {
+    res.status(500).json({
+      message: "Internal server error",
+      status: 500,
+      data: null
+    });
+  }
+});
+
+router.post("/users/public/find", async (req, res) => {
   try {
     //Get user by phone number
 

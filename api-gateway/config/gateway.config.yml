@@ -14,6 +14,9 @@ apiEndpoints:
   mutation-api:
     host: localhost
     paths: "/mutations*"
+  allocation-api:
+    host: localhost
+    paths: "/allocations*"
 
 serviceEndpoints:
   # see: http://www.express-gateway.io/docs/configuration/gateway.config.yml/serviceEndpoints
@@ -23,6 +26,8 @@ serviceEndpoints:
     url: "http://localhost:3000/"
   mutationsrv:
     url: "http://localhost:3002/"
+  allocationsrv:
+    url: "http://localhost:3003/"
 policies:
   - proxy
 pipelines:
@@ -52,4 +57,13 @@ pipelines:
       - proxy:
           - action:
               serviceEndpoint: mutationsrv
+              changeOrigin: true
+
+  allocation:
+    apiEndpoints:
+      - allocation-api
+    policies:
+      - proxy:
+          - action:
+              serviceEndpoint: allocationsrv
               changeOrigin: true

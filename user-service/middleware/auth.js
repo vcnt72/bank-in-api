@@ -1,20 +1,23 @@
-const jwt = require("jsonwebtoken");
 const User = require("../db/models").User;
+const axios = require("axios").default;
 
 exports.isAdmin = async (req, res, next) => {
   try {
     const token = req.header("Authorization").replace("Bearer ", "");
 
-    const decoded = jwt.verify(token, "secret");
-
-    const user = await User.findOne({
-      where: { phoneNumber: decoded.phoneNumber, token }
+    const auth = await axios.get("http://localhost:3000/auth", {
+      token
     });
 
-    if (user.role != "admin") {
-      throw new Error();
-    }
+    const user = await User.findOne({
+      where: {
+        email: auth.data.data.user
+      }
+    });
 
+    if (user.role !== "admin") {
+      throw new Error("not admin");
+    }
     // eslint-disable-next-line require-atomic-updates
     req.user = user;
 
@@ -32,12 +35,15 @@ exports.isAuth = async (req, res, next) => {
   try {
     const token = req.header("Authorization").replace("Bearer ", "");
 
-    const decoded = jwt.verify(token, "secret");
-
-    const user = await User.findOne({
-      where: { phoneNumber: decoded.phoneNumber, token }
+    const auth = await axios.get("http://localhost:3000/auth", {
+      token
     });
 
+    const user = await User.findOne({
+      where: {
+        email: auth.data.data.user
+      }
+    });
     // eslint-disable-next-line require-atomic-updates
     req.user = user;
 

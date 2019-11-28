@@ -1,5 +1,4 @@
 const axios = require("axios").default;
-const jwt = require("jsonwebtoken");
 
 const isAuth = async (req, res, next) => {
   try {
@@ -9,7 +8,7 @@ const isAuth = async (req, res, next) => {
       token
     });
 
-    if (verify.data.status === 404) {
+    if (verify.status === 404) {
       return res.status(404).json({
         message: "Not found",
         status: 404,
@@ -17,8 +16,13 @@ const isAuth = async (req, res, next) => {
       });
     }
 
+    const auth = await axios.post("http://localhost:3001/users/find", {
+      email: verify.data.data.user.email
+    });
     // eslint-disable-next-line require-atomic-updates
-    req.decode = jwt.verify(token, "secret");
+    req.auth = auth.data.data;
+    // eslint-disable-next-line require-atomic-updates
+    req.token = token;
 
     next();
   } catch (error) {

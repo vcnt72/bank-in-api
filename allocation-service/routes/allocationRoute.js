@@ -3,15 +3,17 @@ const router = express.Router();
 const Allocation = require("../db/models").Allocation;
 const isAuth = require("../middleware/auth");
 const sequelize = require("../db/models").sequelize;
+const mutationServices = require("../services/mutationServices");
+const userServices = require("../services/userServices");
 
 //get allocations and will create allocations for the users if being called for the firsttime
 router.get("/allocations", isAuth, async (req, res) => {
   try {
-    const decode = req.decode;
+    const auth = req.auth;
 
     const allocations = await Allocation.findAll({
       where: {
-        user: decode.phoneNumber
+        user: auth.phoneNumber
       }
     });
 
@@ -29,36 +31,71 @@ router.get("/allocations", isAuth, async (req, res) => {
   }
 });
 
+router.post("/allocations/public/main", async (req, res) => {
+  const { email } = req.body;
+  try {
+    const user = await userServices.findUserByEmail(email);
+    const createAllocation = await Allocation.create({
+      amount: 0,
+      name: "main",
+      user: user.phoneNumber
+    });
+    res.status(200).json({
+      status: 200,
+      message: "success",
+      data: createAllocation
+    });
+  } catch (error) {
+    res.status(500).json({
+      status: 500,
+      message: "Internal server error",
+      data: null
+    });
+  }
+});
+
 //create new allocations
 router.put("/allocations", isAuth, async (req, res) => {
-  try {
-    const decode = req.decode;
+  const { amount, name, category } = req.body;
+  const auth = req.auth;
 
+  try {
     //find user balance which has named main
 
     const userAllocation = await Allocation.findOne({
-      user: decode.phoneNumber,
+      user: auth.phoneNumber,
       name: "main"
     });
 
     //decrease by the amount request on main
     //will be negative, cuz it's assume the front end have checked the balance through another end point
 
-    await userAllocation.decrement({
-      balance: req.body.amount
-    });
+    const transaction = await sequelize.transaction(async t => {
+      await userAllocation.decrement(
+        {
+          balance: amount
+        },
+        { transaction: t }
+      );
 
-    await Allocation.create({
-      user: decode.phoneNumber,
-      name: req.body.name,
-      category: req.body.category,
-      balance: req.body.amount
+      const allocation = await Allocation.create(
+        {
+          user: auth.phoneNumber,
+          name,
+          category,
+          balance: amount
+        },
+        {
+          transaction: t
+        }
+      );
+      return allocation;
     });
 
     res.status(201).json({
       message: "Success",
       status: 201,
-      data: null
+      data: transaction
     });
   } catch (error) {
     res.status(500).json({
@@ -71,12 +108,14 @@ router.put("/allocations", isAuth, async (req, res) => {
 
 router.post("/allocations/check/balance", isAuth, async (req, res) => {
   try {
-    const decode = req.decode;
+    const auth = req.auth;
+
     const { name, amount } = req.body;
+
     const allocation = await Allocation.findOne({
       where: {
-        user: decode.phoneNumber,
-        name: name
+        user: auth.phoneNumber,
+        name
       }
     });
 
@@ -102,84 +141,71 @@ router.post("/allocations/check/balance", isAuth, async (req, res) => {
   }
 });
 
-//decrease main balance of the authenticated users
-//by authenticating users
-router.patch("/allocations/balance/decrease", isAuth, async (req, res) => {
+router.post("/allocations/transfer", isAuth, async (req, res) => {
   try {
-    const { name, amount } = req.body;
-    const decode = req.decode;
-    const allocation = await Allocation.findOne({
+    const { name, recipient, amount } = req.body;
+    const user = req.auth;
+    const token = req.token;
+
+    const getUserAllocation = await Allocation.findOne({
       where: {
-        user: decode.phoneNumber,
+        user: user.phoneNumber,
         name
       }
     });
 
-    if (allocation.balance - amount < 0) {
-      return res.status(403).json({
-        message: "Insufficient amount",
-        status: 403,
-        data: null
-      });
-    }
-
-    const transaction = await sequelize.transaction(async t => {
-      const decrementingBalance = await allocation.decrement(
-        {
-          balance: amount
-        },
-        { transaction: t }
-      );
-      return decrementingBalance;
-    });
-
-    res.status(202).json({
-      message: "Success",
-      status: 202,
-      data: transaction
-    });
-  } catch (error) {
-    res.status(500).json({
-      message: "Internal server error",
-      status: 500,
-      data: null
-    });
-  }
-});
-
-//increase main balance of the phoneNumber
-router.patch("/allocations/balance/increase", isAuth, async (req, res) => {
-  try {
-    const { phoneNumber, amount } = req.body;
-    const allocation = await Allocation.findOne({
+    const getRecipientMain = await Allocation.findOne({
       where: {
-        user: phoneNumber,
+        user: recipient,
         name: "main"
       }
     });
 
+    // eslint-disable-next-line no-unused-vars
     const transaction = await sequelize.transaction(async t => {
-      const incrementingBalance = await allocation.increment(
+      const decreaseUserAllocationWithFee = await getUserAllocation.decrement(
+        {
+          balance: amount + 50
+        },
+        {
+          transaction: t
+        }
+      );
+
+      // eslint-disable-next-line no-unused-vars
+      const increaseRecipientMainBalance = await getRecipientMain.increment(
         {
           balance: amount
         },
-        { transaction: t }
+        {
+          transaction: t
+        }
       );
-      return incrementingBalance;
+
+      return decreaseUserAllocationWithFee;
     });
 
-    res.status(202).json({
-      message: "Success",
-      status: 202,
-      data: transaction
+    // eslint-disable-next-line no-unused-vars
+    const mutation = await mutationServices.postMutation(
+      {
+        amount,
+        recipient,
+        code: "TRO"
+      },
+      token
+    );
+
+    res.status(200).json({
+      status: 200,
+      messages: "Success",
+      data: null
     });
   } catch (error) {
-    res.status(500).json({
-      message: "Internal server error",
+    res.json({
+      message: error,
       status: 500,
       data: null
     });
   }
 });
-
 module.exports = router;

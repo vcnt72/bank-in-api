@@ -51,6 +51,7 @@ router.post("/mutations", auth, async (req, res) => {
     input.code = input.code + (await utils.codeFormatter(decode.id));
 
     const mutation = await Mutation.create(input);
+    input;
 
     if (code === "TRO") {
       // if the input code is TRO the transfer fee will be saved to mutation
@@ -63,14 +64,14 @@ router.post("/mutations", auth, async (req, res) => {
 
       //Requesting the recipient id from user service
       const requestRecipientID = await axios.post(
-        "http://localhost:3000/users/phoneNumber",
+        "http://localhost:3001/users/find",
         {
           phoneNumber: input.recipient
         }
       );
 
       //get recipient id
-      const recipientId = requestRecipientID.data.data[0].id;
+      const recipientId = requestRecipientID.data.data.id;
 
       //Add transfer in mutation to corresponding recipient
       await Mutation.create({

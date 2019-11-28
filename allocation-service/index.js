@@ -6,7 +6,7 @@ const allocationRouter = require("./routes/allocationRoute");
 app.use(bodyparser.json());
 app.use(allocationRouter);
 
-const port = 3002 || process.env.PORT;
+const port = 3003 || process.env.PORT;
 
 app.listen(port, () => {
   console.log("Sign on " + port);
