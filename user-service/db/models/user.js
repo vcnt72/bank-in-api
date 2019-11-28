@@ -33,9 +33,6 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.STRING,
         allowNull: false,
         defaultValue: "user"
-      },
-      token: {
-        type: DataTypes.STRING
       }
     },
     {
