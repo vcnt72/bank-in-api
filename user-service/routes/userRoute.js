@@ -2,6 +2,7 @@ const express = require("express");
 const router = express.Router();
 const auth = require("../middleware/auth");
 const User = require("../db/models").User;
+const utils = require("../utils/userUtils");
 
 router.post("/users", async (req, res) => {
   try {
@@ -84,6 +85,34 @@ router.get("/users", auth.isAdmin, async (req, res) => {
     res.status(500).json({
       message: error,
       status: 500,
+      data: null
+    });
+  }
+});
+
+router.post("/users/verify/password", auth.isAuth, async (req, res) => {
+  try {
+    const auth = req.auth;
+    const { password } = req.body;
+    const verifyPassword = await utils.verifyPassword(password, auth.password);
+
+    if (!verifyPassword) {
+      return res.status(202).json({
+        status: 202,
+        message: "Wrong password",
+        data: verifyPassword
+      });
+    }
+
+    res.status(200).json({
+      status: 200,
+      message: "Success",
+      data: verifyPassword
+    });
+  } catch (error) {
+    res.status(500).json({
+      status: 500,
+      message: "Internal server error",
       data: null
     });
   }

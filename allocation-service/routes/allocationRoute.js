@@ -198,7 +198,11 @@ router.post("/allocations/transfer", isAuth, async (req, res) => {
     res.status(200).json({
       status: 200,
       messages: "Success",
-      data: null
+      data: {
+        name,
+        recipient,
+        amount
+      }
     });
   } catch (error) {
     res.json({

@@ -45,7 +45,7 @@ exports.isAuth = async (req, res, next) => {
       }
     });
     // eslint-disable-next-line require-atomic-updates
-    req.user = user;
+    req.auth = user;
 
     next();
   } catch (error) {
